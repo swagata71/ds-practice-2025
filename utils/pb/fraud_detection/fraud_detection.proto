@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package fraud_detection;
+
+service FraudService {
+    rpc CheckFraud(FraudRequest) returns (FraudResponse);
+}
+
+message FraudRequest {
+    string order_id = 1;
+    string user_id = 2;
+    float amount = 3;
+}
+
+message FraudResponse {
+    bool is_fraud = 1;
+}
