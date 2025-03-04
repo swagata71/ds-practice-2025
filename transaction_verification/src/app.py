@@ -26,7 +26,7 @@ def serve():
     transaction_pb2_grpc.add_TransactionVerificationServiceServicer_to_server(TransactionVerificationService(), server)
     server.add_insecure_port("[::]:50052")
     server.start()
-    print("Transaction Verification Service running on port 50052...")
+    print("Transaction Verification Service running on port 50052....")
     server.wait_for_termination()
 
 if __name__ == "__main__":
