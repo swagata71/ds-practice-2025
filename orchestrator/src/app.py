@@ -59,8 +59,12 @@ def check_transaction(order):
         order_id=order["order_id"],
         user_id=order["user_id"],
         amount=order["amount"],
-        payment_method=order["payment_method"]
+        payment_method=order["payment_method"],
+        credit_card=order["creditCard"]["number"]
+        
+        
     ))
+    print(f"Transaction verification response: {response}")
     return response.is_valid, response.reason
 
 def get_suggestions(purchased_books):
@@ -90,6 +94,10 @@ def checkout():
     if results.get("fraudulent", False):
         return jsonify({"status": "rejected", "reason": "Fraud detected"}), 400
 
+    is_valid, reason = check_transaction(order)
+    if not is_valid:
+        return jsonify({"status": "rejected", "reason": reason}), 400
+    
     # Dummy response for now (extend later for other microservices)
     order_status_response = {
         'orderId': order["order_id"],
