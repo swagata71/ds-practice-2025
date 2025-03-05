@@ -11,7 +11,6 @@ message TransactionRequest {
     string user_id = 2;
     float amount = 3;
     string payment_method = 4;
-    string credit_card = 5;
 }
 
 message TransactionResponse {

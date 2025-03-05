@@ -19,10 +19,12 @@ class TransactionVerificationService(transaction_pb2_grpc.TransactionVerificatio
             return transaction_pb2.TransactionResponse(is_valid=False, reason="Invalid transaction amount.")
         if not request.payment_method:
             return transaction_pb2.TransactionResponse(is_valid=False, reason="Missing payment method.")
+
         if request.payment_method == "credit_card":
             if not request.credit_card or len(request.credit_card) != 16:
                 return transaction_pb2.TransactionResponse(is_valid=False, reason="Invalid credit card number. Must be at least 16 digits.")
         
+
         return transaction_pb2.TransactionResponse(is_valid=True, reason="Transaction is valid.")
 
 def serve():

@@ -7,11 +7,7 @@ import threading
 # Change these lines only if strictly needed.
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
 fraud_detection_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/fraud_detection'))
-transaction_verification_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/transaction_verification'))
-suggestions_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/suggestions'))
 sys.path.insert(0, fraud_detection_grpc_path)
-sys.path.insert(0, transaction_verification_grpc_path)
-sys.path.insert(0, suggestions_grpc_path)
 import fraud_detection_pb2 as fraud_detection
 import fraud_detection_pb2_grpc as fraud_detection_grpc
 import transaction_verification_pb2 as transaction_pb2
@@ -59,12 +55,11 @@ def check_transaction(order):
         order_id=order["order_id"],
         user_id=order["user_id"],
         amount=order["amount"],
-        payment_method=order["payment_method"],
-        credit_card=order["creditCard"]["number"]
-        
-        
+        payment_method=order["payment_method"]
     ))
+
     print(f"Transaction verification response: {response}")
+
 
     return response.is_valid, response.reason
 
@@ -99,10 +94,6 @@ def checkout():
     if results.get("fraudulent", False):
         return jsonify({"status": "rejected", "reason": "Fraud detected"}), 400
 
-    is_valid, reason = check_transaction(order)
-    if not is_valid:
-        return jsonify({"status": "rejected", "reason": reason}), 400
-    
     # Dummy response for now (extend later for other microservices)
     '''
     order_status_response = {
