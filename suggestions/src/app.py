@@ -15,9 +15,10 @@ import suggestions_pb2_grpc as suggestions_pb2_grpc
 
 BOOK_SUGGESTIONS = {
     "Book A": ["Book C", "Book D"],
-    "Book B": ["Book E"],
+    "Book B": ["Book E", "Book F"],
+    "Book K": ["Book G", "Book H"],
+    "Book L": ["Book I", "Book J"],
 }
-
 class SuggestionsService(suggestions_pb2_grpc.SuggestionsServiceServicer):
     def GetSuggestions(self, request, context):
         suggested_books = set()

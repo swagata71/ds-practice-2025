@@ -65,6 +65,7 @@ def check_transaction(order):
         
     ))
     print(f"Transaction verification response: {response}")
+
     return response.is_valid, response.reason
 
 def get_suggestions(purchased_books):
@@ -80,7 +81,11 @@ def checkout():
     
     # 🔹 Debugging: Print incoming request data
     print("🔍 Incoming Request Data:", order)
+    purchased_books = [item["name"] for item in order.get("items", [])]
 
+    # Call the Suggestions Service
+    suggested_books = get_suggestions(purchased_books)
+    print(f"📚 Suggested Books: {suggested_books}")
     # Check if order_id exists in request
     if "order_id" not in order:
         return jsonify({"error": "Missing order_id in request"}), 400
@@ -99,6 +104,7 @@ def checkout():
         return jsonify({"status": "rejected", "reason": reason}), 400
     
     # Dummy response for now (extend later for other microservices)
+    '''
     order_status_response = {
         'orderId': order["order_id"],
         'status': 'Order Approved',
@@ -107,7 +113,12 @@ def checkout():
             {'bookId': '456', 'title': 'The Second Best Book', 'author': 'Author 2'}
         ]
     }
-
+    '''
+    order_status_response = {
+        'orderId': order["order_id"],
+        'status': 'Order Approved',
+        "suggestedBooks": [{"title": book} for book in suggested_books]
+    }
     return jsonify(order_status_response)
 
 
