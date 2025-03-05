@@ -118,7 +118,7 @@ def checkout():
 # Handle transaction verification
     if not is_valid:
         return jsonify({"status": "rejected", "reason": reason}), 400
-
+    #corrected the threading here @RohanIyer136
 # Prepare the final response
     order_status_response = {
         "orderId": order["order_id"],
