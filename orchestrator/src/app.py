@@ -91,34 +91,41 @@ def checkout():
         return jsonify({"error": "Missing order_id in request"}), 400
     
     results = {}
+    #fraud_thread = threading.Thread(target=check_fraud, args=(order, results))
+    #fraud_thread.start()
+    #fraud_thread.join()
     fraud_thread = threading.Thread(target=check_fraud, args=(order, results))
-    fraud_thread.start()
-    fraud_thread.join()
+    transaction_thread = threading.Thread(target=lambda: results.update({"transaction": check_transaction(order)}))
+    suggestions_thread = threading.Thread(target=lambda: results.update({"suggested_books": get_suggestions(purchased_books)}))
 
+    # Start threads
+    fraud_thread.start()
+    transaction_thread.start()
+    suggestions_thread.start()
+
+    # Wait for all threads to complete
+    fraud_thread.join()
+    transaction_thread.join()
+    suggestions_thread.join()
     # Check fraud response
+    is_valid, reason = results["transaction"]
+    suggested_books = results["suggested_books"]
+
+# Handle fraud check
     if results.get("fraudulent", False):
         return jsonify({"status": "rejected", "reason": "Fraud detected"}), 400
 
-    is_valid, reason = check_transaction(order)
+# Handle transaction verification
     if not is_valid:
         return jsonify({"status": "rejected", "reason": reason}), 400
-    
-    # Dummy response for now (extend later for other microservices)
-    '''
+
+# Prepare the final response
     order_status_response = {
-        'orderId': order["order_id"],
-        'status': 'Order Approved',
-        'suggestedBooks': [
-            {'bookId': '123', 'title': 'The Best Book', 'author': 'Author 1'},
-            {'bookId': '456', 'title': 'The Second Best Book', 'author': 'Author 2'}
-        ]
+        "orderId": order["order_id"],
+        "status": "Order Approved",
+        "suggestedBooks": [{"title": book} for book in suggested_books],
     }
-    '''
-    order_status_response = {
-        'orderId': order["order_id"],
-        'status': 'Order Approved',
-        "suggestedBooks": [{"title": book} for book in suggested_books]
-    }
+
     return jsonify(order_status_response)
 
 
