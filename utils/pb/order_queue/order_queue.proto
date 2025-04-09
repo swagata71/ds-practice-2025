@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package order_queue;
+
+service OrderQueueService {
+  rpc Enqueue(OrderRequest) returns (EnqueueResponse);
+  rpc Dequeue(Empty) returns (DequeueResponse);
+}
+
+message OrderRequest {
+  string orderId = 1;
+  float amount = 2;
+  int32 itemCount = 3;
+  string userType = 4; // e.g. "premium", "standard"
+}
+
+message EnqueueResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message Empty {}
+
+message DequeueResponse {
+  string orderId = 1;
+  bool found = 2;
+}

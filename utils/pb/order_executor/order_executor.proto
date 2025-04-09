@@ -3,24 +3,36 @@ syntax = "proto3";
 package order_executor;
 
 service OrderExecutorService {
+  // Called by a lower ID replica to start an election
   rpc StartElection(ElectionRequest) returns (ElectionResponse);
-  rpc NotifyLeader(ElectionRequest) returns (ElectionResponse);
+
+  // Called to announce who won the election
+  rpc AnnounceLeader(LeaderAnnouncement) returns (Ack);
+
+  // Called by the leader to dequeue and process an order
   rpc DequeueOrder(OrderRequest) returns (OrderResponse);
 }
 
 message ElectionRequest {
-  int32 replica_id = 1;
+  int32 sender_id = 1;
 }
 
 message ElectionResponse {
-  bool success = 1;
-  int32 leader_id = 2;
+  bool acknowledged = 1;
+}
+
+message LeaderAnnouncement {
+  int32 leader_id = 1;
+}
+
+message Ack {
+  bool received = 1;
 }
 
 message OrderRequest {
-  int32 replica_id = 1;
+  string dummy = 1; // optional placeholder
 }
 
 message OrderResponse {
-  string status = 1;
+  string message = 1;
 }

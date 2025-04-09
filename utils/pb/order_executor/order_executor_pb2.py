@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n#order_executor/order_executor.proto\x12\x0eorder_executor\"%\n\x0f\x45lectionRequest\x12\x12\n\nreplica_id\x18\x01 \x01(\x05\"6\n\x10\x45lectionResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x11\n\tleader_id\x18\x02 \x01(\x05\"\"\n\x0cOrderRequest\x12\x12\n\nreplica_id\x18\x01 \x01(\x05\"\x1f\n\rOrderResponse\x12\x0e\n\x06status\x18\x01 \x01(\t2\x8a\x02\n\x14OrderExecutorService\x12R\n\rStartElection\x12\x1f.order_executor.ElectionRequest\x1a .order_executor.ElectionResponse\x12Q\n\x0cNotifyLeader\x12\x1f.order_executor.ElectionRequest\x1a .order_executor.ElectionResponse\x12K\n\x0c\x44\x65queueOrder\x12\x1c.order_executor.OrderRequest\x1a\x1d.order_executor.OrderResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n#order_executor/order_executor.proto\x12\x0eorder_executor\"$\n\x0f\x45lectionRequest\x12\x11\n\tsender_id\x18\x01 \x01(\x05\"(\n\x10\x45lectionResponse\x12\x14\n\x0c\x61\x63knowledged\x18\x01 \x01(\x08\"\'\n\x12LeaderAnnouncement\x12\x11\n\tleader_id\x18\x01 \x01(\x05\"\x17\n\x03\x41\x63k\x12\x10\n\x08received\x18\x01 \x01(\x08\"\x1d\n\x0cOrderRequest\x12\r\n\x05\x64ummy\x18\x01 \x01(\t\" \n\rOrderResponse\x12\x0f\n\x07message\x18\x01 \x01(\t2\x82\x02\n\x14OrderExecutorService\x12R\n\rStartElection\x12\x1f.order_executor.ElectionRequest\x1a .order_executor.ElectionResponse\x12I\n\x0e\x41nnounceLeader\x12\".order_executor.LeaderAnnouncement\x1a\x13.order_executor.Ack\x12K\n\x0c\x44\x65queueOrder\x12\x1c.order_executor.OrderRequest\x1a\x1d.order_executor.OrderResponseb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'order_executor.order_executor_pb2', globals())
@@ -21,13 +21,17 @@ if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   _ELECTIONREQUEST._serialized_start=55
-  _ELECTIONREQUEST._serialized_end=92
-  _ELECTIONRESPONSE._serialized_start=94
-  _ELECTIONRESPONSE._serialized_end=148
-  _ORDERREQUEST._serialized_start=150
-  _ORDERREQUEST._serialized_end=184
-  _ORDERRESPONSE._serialized_start=186
-  _ORDERRESPONSE._serialized_end=217
-  _ORDEREXECUTORSERVICE._serialized_start=220
-  _ORDEREXECUTORSERVICE._serialized_end=486
+  _ELECTIONREQUEST._serialized_end=91
+  _ELECTIONRESPONSE._serialized_start=93
+  _ELECTIONRESPONSE._serialized_end=133
+  _LEADERANNOUNCEMENT._serialized_start=135
+  _LEADERANNOUNCEMENT._serialized_end=174
+  _ACK._serialized_start=176
+  _ACK._serialized_end=199
+  _ORDERREQUEST._serialized_start=201
+  _ORDERREQUEST._serialized_end=230
+  _ORDERRESPONSE._serialized_start=232
+  _ORDERRESPONSE._serialized_end=264
+  _ORDEREXECUTORSERVICE._serialized_start=267
+  _ORDEREXECUTORSERVICE._serialized_end=525
 # @@protoc_insertion_point(module_scope)
