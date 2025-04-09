@@ -3,17 +3,41 @@ syntax = "proto3";
 package transaction_verification;
 
 service TransactionVerificationService {
-    rpc VerifyTransaction(TransactionRequest) returns (TransactionResponse);
+    rpc InitOrder(InitOrderRequest) returns (InitOrderResponse);
+    rpc CheckBooks(EventRequest) returns (EventResponse);
+    rpc CheckUserFields(EventRequest) returns (EventResponse);
+    rpc CheckCardFormat(EventRequest) returns (EventResponse);
+    rpc ClearOrder(ClearOrderRequest) returns (ClearOrderResponse);
 }
 
-message TransactionRequest {
+message InitOrderRequest {
     string order_id = 1;
-    string user_id = 2;
-    float amount = 3;
-    string payment_method = 4;
+    map<string, string> user_data = 2;
+    repeated string books = 3;
+    string credit_card = 4;
 }
 
-message TransactionResponse {
-    bool is_valid = 1;
-    string reason = 2;
+message InitOrderResponse {
+    bool success = 1;
+    string message = 2;
+    map<string, int32> vector_clock = 3;
+}
+
+message EventRequest {
+    string order_id = 1;
+}
+
+message EventResponse {
+    bool is_success = 1;
+    string message = 2;
+    map<string, int32> vector_clock = 3;
+}
+
+message ClearOrderRequest {
+    string order_id = 1;
+    map<string, int32> final_vector_clock = 2;
+}
+
+message ClearOrderResponse {
+    string status = 1;
 }

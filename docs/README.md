@@ -143,7 +143,12 @@ grpcurl -plaintext -d '{"purchased_books": ["Book A"]}' localhost:50053 suggesti
 ```
 
 ---
+## 📂 Architechural and System Design Diagrams
+### Architecture diagram
+![System Architecture](Architecture_diagram.svg)
 
+### System design Flow
+![System Communication](system_diagram.svg)
 ## ❗ Important Notes
 
 - Ensure that all `.proto` files are properly compiled using `grpc_tools.protoc`.
