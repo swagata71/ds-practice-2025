@@ -38,7 +38,7 @@ suggestions_stub = suggestions_pb2_grpc.SuggestionsServiceStub(grpc.insecure_cha
 
 # ----- Transaction Verification Handler -----
 
-def transaction_event_flow(order, result_holder):
+def transaction_event_flow(order, result_holder, event):
     try:
         order_id = order["order_id"]
         user_data = {
@@ -59,35 +59,41 @@ def transaction_event_flow(order, result_holder):
 
         if not init_response.success:
             result_holder["transaction"] = (False, init_response.message)
+            event.set()
             return
 
         books_resp = transaction_stub.CheckBooks(transaction_pb2.EventRequest(order_id=order_id))
         logging.debug(f"CheckBooks updated clock: {books_resp.vector_clock}")
         if not books_resp.is_success:
             result_holder["transaction"] = (False, books_resp.message)
+            event.set()
             return
 
         user_resp = transaction_stub.CheckUserFields(transaction_pb2.EventRequest(order_id=order_id))
         logging.debug(f"CheckUserFields updated clock: {user_resp.vector_clock}")
         if not user_resp.is_success:
             result_holder["transaction"] = (False, user_resp.message)
+            event.set()
             return
 
         card_resp = transaction_stub.CheckCardFormat(transaction_pb2.EventRequest(order_id=order_id))
         logging.debug(f"CheckCardFormat updated clock: {card_resp.vector_clock}")
         if not card_resp.is_success:
             result_holder["transaction"] = (False, card_resp.message)
+            event.set()
             return
 
         result_holder["transaction"] = (True, "Transaction Valid")
+        event.set()
 
     except Exception as e:
         logging.debug(f"Exception in transaction_event_flow: {str(e)}")
         result_holder["transaction"] = (False, f"Exception: {str(e)}")
+        event.set()
 
 # ----- Fraud Detection Handler -----
 
-def fraud_event_flow(order, result_holder):
+def fraud_event_flow(order, result_holder, event):
     try:
         order_id = order["order_id"]
         user_id = order["user_id"]
@@ -102,42 +108,49 @@ def fraud_event_flow(order, result_holder):
 
         if not init_response.success:
             result_holder["fraudulent"] = True
+            event.set()
             return
 
         user_resp = fraud_stub.CheckUserFraud(fraud_detection.EventRequest(order_id=order_id))
         logging.debug(f"CheckUserFraud updated clock: {user_resp.vector_clock}")
         if not user_resp.is_success:
             result_holder["fraudulent"] = True
+            event.set()
             return
 
         card_resp = fraud_stub.CheckCardFraud(fraud_detection.EventRequest(order_id=order_id))
         logging.debug(f"CheckCardFraud updated clock: {card_resp.vector_clock}")
         if not card_resp.is_success:
             result_holder["fraudulent"] = True
+            event.set()
             return
 
         result_holder["fraudulent"] = False
+        event.set()
 
     except Exception as e:
         logging.debug(f"Exception in fraud_event_flow: {str(e)}")
         result_holder["fraudulent"] = True
+        event.set()
 
 # ----- Book Suggestions -----
 
-def get_suggestions(order, result_holder):
+def get_suggestions(order, result_holder, event):
     try:
         order_id = order["order_id"]
         purchased_books = [item["name"] for item in order.get("items", [])]
 
-        logging.debug(f"Function call_generate_suggestions(order_id = '{order_id}', current_clock = N/A, order_data = {order}, result_dict = {result_holder})")
+        logging.debug(f"Function call_generate_suggestions(order_id = '{order_id}', order_data = {order}, result_dict = {result_holder})")
         response = suggestions_stub.GetSuggestions(suggestions_pb2.SuggestionRequest(
             purchased_books=purchased_books
         ))
         result_holder["suggested_books"] = response.suggested_books
-        logging.debug(f"Final vector clock from Suggestions: N/A")
+        logging.debug(f"Final vector clock from Suggestions: {response.vector_clock}")
+        event.set()
     except Exception as e:
         logging.debug(f"Exception in get_suggestions: {str(e)}")
         result_holder["suggested_books"] = []
+        event.set()
 
 # ----- Checkout Route -----
 
@@ -150,27 +163,29 @@ def checkout():
         return jsonify({"error": "Missing order_id in request"}), 400
 
     results = {}
+    fraud_done = threading.Event()
+    transaction_done = threading.Event()
+    suggestion_done = threading.Event()
 
-    fraud_thread = threading.Thread(target=fraud_event_flow, args=(order, results))
-    transaction_thread = threading.Thread(target=transaction_event_flow, args=(order, results))
-    suggestions_thread = threading.Thread(target=get_suggestions, args=(order, results))
+    fraud_thread = threading.Thread(target=fraud_event_flow, args=(order, results, fraud_done))
+    transaction_thread = threading.Thread(target=transaction_event_flow, args=(order, results, transaction_done))
+    suggestions_thread = threading.Thread(target=get_suggestions, args=(order, results, suggestion_done))
 
     fraud_thread.start()
     transaction_thread.start()
     suggestions_thread.start()
 
-    fraud_thread.join()
-    transaction_thread.join()
-    suggestions_thread.join()
-
-    is_valid, reason = results.get("transaction", (False, "Transaction check failed"))
-    suggested_books = results.get("suggested_books", [])
-
+    fraud_done.wait()
     if results.get("fraudulent", False):
         return jsonify({"status": "rejected", "reason": "Fraud detected"}), 400
 
+    transaction_done.wait()
+    is_valid, reason = results.get("transaction", (False, "Transaction check failed"))
     if not is_valid:
         return jsonify({"status": "rejected", "reason": reason}), 400
+
+    suggestion_done.wait()
+    suggested_books = results.get("suggested_books", [])
 
     return jsonify({
         "orderId": order["order_id"],
