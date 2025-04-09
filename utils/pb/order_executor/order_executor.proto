@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package order_executor;
+
+service OrderExecutorService {
+  rpc StartElection(ElectionRequest) returns (ElectionResponse);
+  rpc NotifyLeader(ElectionRequest) returns (ElectionResponse);
+  rpc DequeueOrder(OrderRequest) returns (OrderResponse);
+}
+
+message ElectionRequest {
+  int32 replica_id = 1;
+}
+
+message ElectionResponse {
+  bool success = 1;
+  int32 leader_id = 2;
+}
+
+message OrderRequest {
+  int32 replica_id = 1;
+}
+
+message OrderResponse {
+  string status = 1;
+}
