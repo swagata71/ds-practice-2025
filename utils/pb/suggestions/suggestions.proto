@@ -12,4 +12,5 @@ message SuggestionRequest {
 
 message SuggestionResponse {
     repeated string suggested_books = 1;
+    map<string, int32> vector_clock = 2; // 🆕 Add this to support logging and concurrency tracking
 }

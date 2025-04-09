@@ -14,13 +14,10 @@ FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
 fraud_detection_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/fraud_detection'))
 transaction_verification_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/transaction_verification'))
 suggestions_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/suggestions'))
-order_queue_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/order_queue'))
-
 
 sys.path.insert(0, fraud_detection_grpc_path)
 sys.path.insert(0, transaction_verification_grpc_path)
 sys.path.insert(0, suggestions_grpc_path)
-sys.path.insert(0, order_queue_grpc_path)
 
 # Import gRPC stubs
 import fraud_detection_pb2 as fraud_detection
@@ -29,8 +26,6 @@ import transaction_verification_pb2 as transaction_pb2
 import transaction_verification_pb2_grpc as transaction_pb2_grpc
 import suggestions_pb2 as suggestions_pb2
 import suggestions_pb2_grpc as suggestions_pb2_grpc
-import order_queue_pb2 as order_queue_pb2
-import order_queue_pb2_grpc as order_queue_pb2_grpc
 
 # Flask app
 app = Flask(__name__)
@@ -40,7 +35,6 @@ CORS(app, resources={r'/*': {'origins': '*'}})
 fraud_stub = fraud_detection_pb2_grpc.FraudServiceStub(grpc.insecure_channel('fraud_detection:50051'))
 transaction_stub = transaction_pb2_grpc.TransactionVerificationServiceStub(grpc.insecure_channel('transaction_verification:50052'))
 suggestions_stub = suggestions_pb2_grpc.SuggestionsServiceStub(grpc.insecure_channel('suggestions:50053'))
-order_queue_stub = order_queue_pb2_grpc.OrderQueueServiceStub(grpc.insecure_channel('order_queue:50056'))
 
 # ----- Transaction Verification Handler -----
 
@@ -130,11 +124,20 @@ def fraud_event_flow(order, result_holder):
 
 # ----- Book Suggestions -----
 
-def get_suggestions(purchased_books):
-    response = suggestions_stub.GetSuggestions(suggestions_pb2.SuggestionRequest(
-        purchased_books=purchased_books
-    ))
-    return response.suggested_books
+def get_suggestions(order, result_holder):
+    try:
+        order_id = order["order_id"]
+        purchased_books = [item["name"] for item in order.get("items", [])]
+
+        logging.debug(f"Function call_generate_suggestions(order_id = '{order_id}', current_clock = N/A, order_data = {order}, result_dict = {result_holder})")
+        response = suggestions_stub.GetSuggestions(suggestions_pb2.SuggestionRequest(
+            purchased_books=purchased_books
+        ))
+        result_holder["suggested_books"] = response.suggested_books
+        logging.debug(f"Final vector clock from Suggestions: N/A")
+    except Exception as e:
+        logging.debug(f"Exception in get_suggestions: {str(e)}")
+        result_holder["suggested_books"] = []
 
 # ----- Checkout Route -----
 
@@ -146,12 +149,11 @@ def checkout():
     if "order_id" not in order:
         return jsonify({"error": "Missing order_id in request"}), 400
 
-    purchased_books = [item["name"] for item in order.get("items", [])]
     results = {}
 
     fraud_thread = threading.Thread(target=fraud_event_flow, args=(order, results))
     transaction_thread = threading.Thread(target=transaction_event_flow, args=(order, results))
-    suggestions_thread = threading.Thread(target=lambda: results.update({"suggested_books": get_suggestions(purchased_books)}))
+    suggestions_thread = threading.Thread(target=get_suggestions, args=(order, results))
 
     fraud_thread.start()
     transaction_thread.start()
@@ -169,10 +171,6 @@ def checkout():
 
     if not is_valid:
         return jsonify({"status": "rejected", "reason": reason}), 400
-    # Enqueue order to the order queue
-    enqueue_response = order_queue_stub.Enqueue(order_queue_pb2.OrderRequest(orderId=order["order_id"],amount=order["amount"],
-    itemCount=sum(item["quantity"] for item in order.get("items", []))))
-    logging.debug(f"Enqueue response: {enqueue_response.message}")
 
     return jsonify({
         "orderId": order["order_id"],
