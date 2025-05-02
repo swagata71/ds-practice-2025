@@ -87,8 +87,8 @@ def transaction_event_flow(order, result_holder, event):
         event.set()
 
     except Exception as e:
-        logging.debug(f"Exception in transaction_event_flow: {str(e)}")
-        result_holder["transaction"] = (False, f"Exception: {str(e)}")
+        logging.error(f"transaction_event_flow failed: {str(e)}")
+        result_holder["transaction"] = (False, "Transaction service encountered an internal error")
         event.set()
 
 # ----- Fraud Detection Handler -----
@@ -129,7 +129,7 @@ def fraud_event_flow(order, result_holder, event):
         event.set()
 
     except Exception as e:
-        logging.debug(f"Exception in fraud_event_flow: {str(e)}")
+        logging.error(f"fraud_event_flow failed: {str(e)}")
         result_holder["fraudulent"] = True
         event.set()
 
@@ -148,7 +148,7 @@ def get_suggestions(order, result_holder, event):
         logging.debug(f"Final vector clock from Suggestions: {response.vector_clock}")
         event.set()
     except Exception as e:
-        logging.debug(f"Exception in get_suggestions: {str(e)}")
+        logging.error(f"get_suggestions failed: {str(e)}")
         result_holder["suggested_books"] = []
         event.set()
 
@@ -160,7 +160,7 @@ def checkout():
     logging.debug(f"Incoming Request Data: {order}")
 
     if "order_id" not in order:
-        return jsonify({"error": "Missing order_id in request"}), 400
+        return jsonify({"status": "rejected", "reason": "Missing order_id in request"}), 400
 
     results = {}
     fraud_done = threading.Event()
