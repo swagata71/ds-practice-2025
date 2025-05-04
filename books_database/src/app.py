@@ -19,46 +19,75 @@ import books_database_pb2_grpc
 
 lock = threading.Lock()
 
-class OrderExecutor:
-    def __init__(self, replica_id, order_queue_host="order_queue", order_queue_port=50056, db_host="books_database_1", db_port=50057):
-        self.replica_id = replica_id
-        self.order_queue_stub = self.connect_order_queue(order_queue_host, order_queue_port)
-        self.db_stub = self.connect_books_database(db_host, db_port)
+class BooksDatabaseServicer(books_database_pb2_grpc.BooksDatabaseServicer):
+    def __init__(self, role, backup_peers=None):
+        self.db = {}  # key-value store
+        self.lock = threading.Lock()
+        self.role = role
+        self.backup_stubs = []
 
-    def connect_order_queue(self, host, port):
-        channel = grpc.insecure_channel(f"{host}:{port}")
-        return order_queue_pb2_grpc.OrderQueueServiceStub(channel)
+        if role == "primary" and backup_peers:
+            for peer in backup_peers:
+                host, port = peer.split(":")
+                channel = grpc.insecure_channel(f"{host}:{port}")
+                stub = books_database_pb2_grpc.BooksDatabaseStub(channel)
+                self.backup_stubs.append(stub)
 
-    def connect_books_database(self, host, port):
-        channel = grpc.insecure_channel(f"{host}:{port}")
-        return books_database_pb2_grpc.BooksDatabaseStub(channel)
+    # Common to both roles
+    def Read(self, request, context):
+        with self.lock:
+            stock = self.db.get(request.title, 0)
+        print(f"🔎 Read stock for {request.title}: {stock}")
+        return books_database_pb2.ReadResponse(stock=stock)
 
-    def execute_orders(self):
-        while True:
-            response = self.order_queue_stub.Dequeue(order_queue_pb2.Empty())
-            order_id = response.orderId
-            if order_id:
-                print(f"⚙️ Executing Order: {order_id}")
-                # Read-Modify-Write logic
-                book_id = "book123"
-                read_response = self.db_stub.Read(books_database_pb2.ReadRequest(book_id=book_id))
-                current_stock = read_response.stock
-
-                if current_stock > 0:
-                    new_stock = current_stock - 1
-                    self.db_stub.Write(books_database_pb2.WriteRequest(book_id=book_id, stock=new_stock))
-                    print(f"Order {order_id}: Decremented stock of {book_id} to {new_stock}")
-                else:
-                    print(f"Order {order_id}: Book {book_id} is out of stock!")
+    def DecrementStock(self, request, context):
+        with self.lock:
+            current = self.db.get(request.title, 0)
+            if current >= request.quantity:
+                self.db[request.title] = current - request.quantity
+                print(f"Decremented {request.title} by {request.quantity}. Remaining: {self.db[request.title]}")
+                return books_database_pb2.StockResponse(success=True, remaining=self.db[request.title])
             else:
-                print("🕒 Waiting for orders...")
-                time.sleep(2)
+                print(f"Not enough stock for {request.title}")
+                return books_database_pb2.StockResponse(success=False, remaining=current)
+
+    # Backup only
+    def ReplicateWrite(self, request, context):
+        with self.lock:
+            self.db[request.title] = request.new_stock
+            print(f"Backup wrote {request.title} → {request.new_stock}")
+        return books_database_pb2.WriteResponse(success=True)
+
+    # Primary only
+    def Write(self, request, context):
+        if self.role != "primary":
+            context.abort(grpc.StatusCode.PERMISSION_DENIED, "Only primary can write")
+
+        with self.lock:
+            self.db[request.title] = request.new_stock
+            print(f"Primary wrote {request.title} → {request.new_stock}")
+
+        for stub in self.backup_stubs:
+            try:
+                stub.ReplicateWrite(request)
+                print(f"Replicated {request.title} to backup")
+            except Exception as e:
+                print(f"Replication failed: {e}")
+
+        return books_database_pb2.WriteResponse(success=True)
 
 def serve():
-    replica_id = int(os.environ.get("REPLICA_ID", 1))
-    order_executor = OrderExecutor(replica_id)
-    print(f"🚀 Order Executor {replica_id} running...")
-    order_executor.execute_orders()
+    role = os.getenv("ROLE", "primary")
+    backup_peers = os.getenv("BACKUP_PEERS", "").split(",") if role == "primary" else None
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    books_database_pb2_grpc.add_BooksDatabaseServicer_to_server(
+        BooksDatabaseServicer(role, backup_peers), server
+    )
+    port = os.getenv("PORT", "50057")
+    server.add_insecure_port(f"[::]:{port}")
+    print(f"BooksDatabase {role} running on port {port}...")
+    server.start()
+    server.wait_for_termination()
 
 if __name__ == '__main__':
     serve()

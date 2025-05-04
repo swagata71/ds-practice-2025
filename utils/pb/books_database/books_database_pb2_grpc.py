@@ -29,6 +29,11 @@ class BooksDatabaseStub(object):
                 request_serializer=books__database_dot_books__database__pb2.StockRequest.SerializeToString,
                 response_deserializer=books__database_dot_books__database__pb2.StockResponse.FromString,
                 )
+        self.ReplicateWrite = channel.unary_unary(
+                '/books_database.BooksDatabase/ReplicateWrite',
+                request_serializer=books__database_dot_books__database__pb2.WriteRequest.SerializeToString,
+                response_deserializer=books__database_dot_books__database__pb2.WriteResponse.FromString,
+                )
 
 
 class BooksDatabaseServicer(object):
@@ -53,6 +58,13 @@ class BooksDatabaseServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ReplicateWrite(self, request, context):
+        """Replication to backups
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_BooksDatabaseServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -70,6 +82,11 @@ def add_BooksDatabaseServicer_to_server(servicer, server):
                     servicer.DecrementStock,
                     request_deserializer=books__database_dot_books__database__pb2.StockRequest.FromString,
                     response_serializer=books__database_dot_books__database__pb2.StockResponse.SerializeToString,
+            ),
+            'ReplicateWrite': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReplicateWrite,
+                    request_deserializer=books__database_dot_books__database__pb2.WriteRequest.FromString,
+                    response_serializer=books__database_dot_books__database__pb2.WriteResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -129,5 +146,22 @@ class BooksDatabase(object):
         return grpc.experimental.unary_unary(request, target, '/books_database.BooksDatabase/DecrementStock',
             books__database_dot_books__database__pb2.StockRequest.SerializeToString,
             books__database_dot_books__database__pb2.StockResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ReplicateWrite(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/books_database.BooksDatabase/ReplicateWrite',
+            books__database_dot_books__database__pb2.WriteRequest.SerializeToString,
+            books__database_dot_books__database__pb2.WriteResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

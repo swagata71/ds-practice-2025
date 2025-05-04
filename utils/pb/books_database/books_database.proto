@@ -6,6 +6,8 @@ service BooksDatabase {
   rpc Read(ReadRequest) returns (ReadResponse);
   rpc Write(WriteRequest) returns (WriteResponse);
   rpc DecrementStock(StockRequest) returns (StockResponse); // Bonus atomic operation
+  rpc ReplicateWrite(WriteRequest) returns (WriteResponse); // Replication to backups
+
 }
 
 message ReadRequest {
