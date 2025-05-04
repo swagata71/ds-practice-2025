@@ -155,6 +155,19 @@ services:
     volumes:
       - ./order_queue/src:/app/order_queue/src
       - ./utils:/app/utils
+
+  payment_service:
+    build:
+      context: ./
+      dockerfile: ./payment_service/Dockerfile
+    ports:
+      - "50058:50058"
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+      - PORT=50058
+    volumes:
+      - ./payment_service/src:/app/payment_service/src
+      - ./utils:/app/utils
   
   books_primary:
     build:
@@ -195,4 +208,3 @@ services:
     volumes:
       - ./books_database/src:/app/books_database/src
       - ./utils:/app/utils
-  

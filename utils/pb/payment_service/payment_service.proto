@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package payment_service;
+
+service PaymentService {
+  rpc PrepareOrder (Order) returns (Ack);
+  rpc CommitOrder (Order) returns (Ack);
+  rpc AbortOrder (Order) returns (Ack);
+}
+
+message Order {
+  string order_id = 1;
+  string user_id = 2;
+  string book_title = 3;
+  int32 quantity = 4;
+}
+
+message Ack {
+  bool success = 1;
+}
