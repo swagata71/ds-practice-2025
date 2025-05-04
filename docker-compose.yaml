@@ -168,3 +168,43 @@ services:
     volumes:
       - ./payment_service/src:/app/payment_service/src
       - ./utils:/app/utils
+  
+  books_primary:
+    build:
+      context: ./
+      dockerfile: ./books_database/Dockerfile
+    environment:
+      - PYTHONFILE=/app/books_database/src/app.py
+      - ROLE=primary
+      - BACKUPS=books_backup_1:50061,books_backup_2:50062
+    ports:
+      - "50060:50060"
+    volumes:
+      - ./books_database/src:/app/books_database/src
+      - ./utils:/app/utils
+
+  books_backup_1:
+    build:
+      context: ./
+      dockerfile: ./books_database/Dockerfile
+    environment:
+      - PYTHONFILE=/app/books_database/src/app.py
+      - ROLE=backup
+    ports:
+      - "50061:50060"
+    volumes:
+      - ./books_database/src:/app/books_database/src
+      - ./utils:/app/utils
+
+  books_backup_2:
+    build:
+      context: ./
+      dockerfile: ./books_database/Dockerfile
+    environment:
+      - PYTHONFILE=/app/books_database/src/app.py
+      - ROLE=backup
+    ports:
+      - "50062:50060"
+    volumes:
+      - ./books_database/src:/app/books_database/src
+      - ./utils:/app/utils
