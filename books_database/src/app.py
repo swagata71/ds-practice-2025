@@ -28,10 +28,17 @@ class BooksDatabaseServicer(books_database_pb2_grpc.BooksDatabaseServicer):
 
         if role == "primary" and backup_peers:
             for peer in backup_peers:
-                host, port = peer.split(":")
-                channel = grpc.insecure_channel(f"{host}:{port}")
-                stub = books_database_pb2_grpc.BooksDatabaseStub(channel)
-                self.backup_stubs.append(stub)
+                if not peer.strip():
+                    continue  # skip empty entries
+                try:
+                    host, port = peer.strip().split(":")
+                    channel = grpc.insecure_channel(f"{host}:{port}")
+                    stub = books_database_pb2_grpc.BooksDatabaseStub(channel)
+                    self.backup_stubs.append(stub)
+                    print(f"Connected to backup at {host}:{port}")
+                except ValueError:
+                    print(f"Skipping malformed backup peer: '{peer}'")
+
 
     # Common to both roles
     def Read(self, request, context):
