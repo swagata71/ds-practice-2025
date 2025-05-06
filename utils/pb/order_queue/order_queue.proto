@@ -14,6 +14,11 @@ message OrderRequest {
   string userType = 4; // e.g. "premium", "standard"
 }
 
+message OrderResponse {
+  string order_id = 1;
+  bool success = 2;
+}
+
 message EnqueueResponse {
   bool success = 1;
   string message = 2;

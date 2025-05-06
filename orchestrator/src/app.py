@@ -14,10 +14,12 @@ FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
 fraud_detection_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/fraud_detection'))
 transaction_verification_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/transaction_verification'))
 suggestions_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/suggestions'))
+order_queue_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/order_queue'))
 
 sys.path.insert(0, fraud_detection_grpc_path)
 sys.path.insert(0, transaction_verification_grpc_path)
 sys.path.insert(0, suggestions_grpc_path)
+sys.path.insert(0, order_queue_grpc_path)
 
 # Import gRPC stubs
 import fraud_detection_pb2 as fraud_detection
@@ -26,6 +28,9 @@ import transaction_verification_pb2 as transaction_pb2
 import transaction_verification_pb2_grpc as transaction_pb2_grpc
 import suggestions_pb2 as suggestions_pb2
 import suggestions_pb2_grpc as suggestions_pb2_grpc
+import order_queue_pb2
+import order_queue_pb2_grpc
+
 
 # Flask app
 app = Flask(__name__)
@@ -35,6 +40,7 @@ CORS(app, resources={r'/*': {'origins': '*'}})
 fraud_stub = fraud_detection_pb2_grpc.FraudServiceStub(grpc.insecure_channel('fraud_detection:50051'))
 transaction_stub = transaction_pb2_grpc.TransactionVerificationServiceStub(grpc.insecure_channel('transaction_verification:50052'))
 suggestions_stub = suggestions_pb2_grpc.SuggestionsServiceStub(grpc.insecure_channel('suggestions:50053'))
+order_queue_stub = order_queue_pb2_grpc.OrderQueueServiceStub(grpc.insecure_channel("order_queue:50056"))
 
 # ----- Transaction Verification Handler -----
 
@@ -186,6 +192,28 @@ def checkout():
 
     suggestion_done.wait()
     suggested_books = results.get("suggested_books", [])
+# Enqueue the order to OrderQueueService
+    try:
+        order_id = order["order_id"]
+        amount = float(order.get("amount", 0))
+        item_count = len(order.get("items", []))
+        user_type = order.get("user", {}).get("type", "regular")
+
+        enqueue_resp = order_queue_stub.Enqueue(order_queue_pb2.OrderRequest(
+            orderId=order_id,
+            amount=amount,
+            itemCount=item_count,
+            userType=user_type
+        ))
+
+        if not enqueue_resp.success:
+            return jsonify({"status": "rejected", "reason": "Failed to enqueue order"}), 500
+
+        logging.info(f"Order {order_id} enqueued successfully.")
+
+    except Exception as e:
+        logging.error(f"Enqueue failed: {str(e)}")
+        return jsonify({"status": "rejected", "reason": "Internal error during enqueue"}), 500
 
     return jsonify({
         "orderId": order["order_id"],

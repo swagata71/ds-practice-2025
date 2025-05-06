@@ -110,8 +110,9 @@ services:
       - "50054:50054"
     environment:
       - REPLICA_ID=1
-      - PORT=50054
-      - PEERS=2:order_executor_2:50055, 3:order_executor_3:50057
+      - REPLICA_PORT=50054
+      - PYTHONUNBUFFERED=TRUE
+      - PEERS=2:order_executor_2:50055,3:order_executor_3:50057
     volumes:
       - ./order_executor/src:/app/order_executor/src
       - ./utils:/app/utils
@@ -124,8 +125,9 @@ services:
       - "50055:50055"
     environment:
       - REPLICA_ID=2
-      - PORT=50055
-      - PEERS=1:order_executor_1:50054, 3:order_executor_3:50057
+      - REPLICA_PORT=50055
+      - PYTHONUNBUFFERED=TRUE
+      - PEERS=1:order_executor_1:50054,3:order_executor_3:50057
     volumes:
       - ./order_executor/src:/app/order_executor/src
       - ./utils:/app/utils
@@ -137,7 +139,8 @@ services:
       - "50057:50057"
     environment:
       - REPLICA_ID=3
-      - PORT=50057
+      - REPLICA_PORT=50057
+      - PYTHONUNBUFFERED=TRUE
       - PEERS=1:order_executor_1:50054,2:order_executor_2:50055
     volumes:
       - ./order_executor/src:/app/order_executor/src

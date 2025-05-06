@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1dorder_queue/order_queue.proto\x12\x0border_queue\"T\n\x0cOrderRequest\x12\x0f\n\x07orderId\x18\x01 \x01(\t\x12\x0e\n\x06\x61mount\x18\x02 \x01(\x02\x12\x11\n\titemCount\x18\x03 \x01(\x05\x12\x10\n\x08userType\x18\x04 \x01(\t\"3\n\x0f\x45nqueueResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"\x07\n\x05\x45mpty\"1\n\x0f\x44\x65queueResponse\x12\x0f\n\x07orderId\x18\x01 \x01(\t\x12\r\n\x05\x66ound\x18\x02 \x01(\x08\x32\x94\x01\n\x11OrderQueueService\x12\x42\n\x07\x45nqueue\x12\x19.order_queue.OrderRequest\x1a\x1c.order_queue.EnqueueResponse\x12;\n\x07\x44\x65queue\x12\x12.order_queue.Empty\x1a\x1c.order_queue.DequeueResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1dorder_queue/order_queue.proto\x12\x0border_queue\"T\n\x0cOrderRequest\x12\x0f\n\x07orderId\x18\x01 \x01(\t\x12\x0e\n\x06\x61mount\x18\x02 \x01(\x02\x12\x11\n\titemCount\x18\x03 \x01(\x05\x12\x10\n\x08userType\x18\x04 \x01(\t\"2\n\rOrderResponse\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x0f\n\x07success\x18\x02 \x01(\x08\"3\n\x0f\x45nqueueResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"\x07\n\x05\x45mpty\"1\n\x0f\x44\x65queueResponse\x12\x0f\n\x07orderId\x18\x01 \x01(\t\x12\r\n\x05\x66ound\x18\x02 \x01(\x08\x32\x94\x01\n\x11OrderQueueService\x12\x42\n\x07\x45nqueue\x12\x19.order_queue.OrderRequest\x1a\x1c.order_queue.EnqueueResponse\x12;\n\x07\x44\x65queue\x12\x12.order_queue.Empty\x1a\x1c.order_queue.DequeueResponseb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'order_queue.order_queue_pb2', globals())
@@ -22,12 +22,14 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
   _ORDERREQUEST._serialized_start=46
   _ORDERREQUEST._serialized_end=130
-  _ENQUEUERESPONSE._serialized_start=132
-  _ENQUEUERESPONSE._serialized_end=183
-  _EMPTY._serialized_start=185
-  _EMPTY._serialized_end=192
-  _DEQUEUERESPONSE._serialized_start=194
-  _DEQUEUERESPONSE._serialized_end=243
-  _ORDERQUEUESERVICE._serialized_start=246
-  _ORDERQUEUESERVICE._serialized_end=394
+  _ORDERRESPONSE._serialized_start=132
+  _ORDERRESPONSE._serialized_end=182
+  _ENQUEUERESPONSE._serialized_start=184
+  _ENQUEUERESPONSE._serialized_end=235
+  _EMPTY._serialized_start=237
+  _EMPTY._serialized_end=244
+  _DEQUEUERESPONSE._serialized_start=246
+  _DEQUEUERESPONSE._serialized_end=295
+  _ORDERQUEUESERVICE._serialized_start=298
+  _ORDERQUEUESERVICE._serialized_end=446
 # @@protoc_insertion_point(module_scope)

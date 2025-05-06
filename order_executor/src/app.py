@@ -53,7 +53,7 @@ class ExecutorService(order_executor_pb2_grpc.OrderExecutorServiceServicer):
             try:
                 channel = grpc.insecure_channel(f"{peer['host']}:{peer['port']}")
                 stub = order_executor_pb2_grpc.OrderExecutorServiceStub(channel)
-                response = stub.StartElection(order_executor_pb2.ElectionRequest(candidate_id=self.replica_id))
+                response = stub.StartElection(order_executor_pb2.ElectionRequest(sender_id=self.replica_id))
                 print(f"Received OK from Replica {peer['id']}")
                 received_ok = True
             except Exception as e:
@@ -68,6 +68,7 @@ class ExecutorService(order_executor_pb2_grpc.OrderExecutorServiceServicer):
             print(f"Replica {self.replica_id} waiting for leader announcement...")
 
     def StartElection(self, request, context):
+        print(f"🗳️ Election thread started on replica {self.replica_id}")
         print(f"Received election request from {request.candidate_id}")
         if self.replica_id > request.candidate_id:
             print(f"Responding to election from {request.candidate_id} as I have higher ID {self.replica_id}")
@@ -75,6 +76,7 @@ class ExecutorService(order_executor_pb2_grpc.OrderExecutorServiceServicer):
         return order_executor_pb2.ElectionResponse(message="ACK")
 
     def run(self):
+        print(f"🏃 Executor loop started on replica {self.replica_id}")
         while True:
             if self.is_leader:
                 print("I'm the leader. Trying to execute order...")
@@ -83,9 +85,9 @@ class ExecutorService(order_executor_pb2_grpc.OrderExecutorServiceServicer):
                     if response.orderId:
                         print(f"Executing order: {response.orderId}")
                         # Simulate read from order queue
-                        order_resp = self.order_queue_stub.Read(
-                            order_queue_pb2.ReadRequest(key=response.orderId)
-                        )
+                        # order_resp = self.order_queue_stub.Read(
+                        #     order_queue_pb2.ReadRequest(key=response.orderId)
+                        # )
                         try:
                             # Simulate read from books DB
                             stock_resp = self.books_db_stub.Read(
@@ -126,7 +128,10 @@ def serve():
     order_executor_pb2_grpc.add_OrderExecutorServiceServicer_to_server(ExecutorService(replica_id, peers), server)
     server.add_insecure_port(f"[::]:{port}")
     print(f"🚀 Order Executor {replica_id} running on port {port}")
+    print("🔧 Starting gRPC server...")
     server.start()
+    print("✅ gRPC server started.")
+
     server.wait_for_termination()
 
 if __name__ == "__main__":
