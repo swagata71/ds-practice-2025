@@ -112,7 +112,7 @@ services:
       - REPLICA_ID=1
       - REPLICA_PORT=50054
       - PYTHONUNBUFFERED=TRUE
-      - PEERS=2:order_executor_2:50055,3:order_executor_3:50057
+      - PEERS=2:order_executor_2:50055,3:order_executor_3:50056
     volumes:
       - ./order_executor/src:/app/order_executor/src
       - ./utils:/app/utils
@@ -127,7 +127,7 @@ services:
       - REPLICA_ID=2
       - REPLICA_PORT=50055
       - PYTHONUNBUFFERED=TRUE
-      - PEERS=1:order_executor_1:50054,3:order_executor_3:50057
+      - PEERS=1:order_executor_1:50054,3:order_executor_3:50056
     volumes:
       - ./order_executor/src:/app/order_executor/src
       - ./utils:/app/utils
@@ -136,10 +136,10 @@ services:
       context: .
       dockerfile: ./order_executor/Dockerfile
     ports:
-      - "50057:50057"
+      - "50056:50056"
     environment:
       - REPLICA_ID=3
-      - REPLICA_PORT=50057
+      - REPLICA_PORT=50056
       - PYTHONUNBUFFERED=TRUE
       - PEERS=1:order_executor_1:50054,2:order_executor_2:50055
     volumes:
@@ -151,7 +151,7 @@ services:
       context: ./
       dockerfile: ./order_queue/Dockerfile
     ports:
-      - "50056:50056"
+      - "50057:50057"
     environment:
       - PYTHONUNBUFFERED=TRUE
       - PYTHONFILE=/app/order_queue/src/app.py

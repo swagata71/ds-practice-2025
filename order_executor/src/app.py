@@ -64,17 +64,33 @@ class ExecutorService(order_executor_pb2_grpc.OrderExecutorServiceServicer):
                 self.is_leader = True
                 self.leader_id = self.replica_id
                 print(f"Replica {self.replica_id} is the new leader!")
-        else:
-            print(f"Replica {self.replica_id} waiting for leader announcement...")
+
+                # Inform all peers
+                for peer in self.peers:
+                    try:
+                        channel = grpc.insecure_channel(f"{peer['host']}:{peer['port']}")
+                        stub = order_executor_pb2_grpc.OrderExecutorServiceStub(channel)
+                        stub.AnnounceLeader(order_executor_pb2.LeaderAnnouncement(leader_id=self.replica_id))
+                    except Exception as e:
+                        print(f"Could not inform peer {peer['id']} about new leader: {e}")
+
 
     def StartElection(self, request, context):
         print(f"🗳️ Election thread started on replica {self.replica_id}")
-        print(f"Received election request from {request.candidate_id}")
-        if self.replica_id > request.candidate_id:
-            print(f"Responding to election from {request.candidate_id} as I have higher ID {self.replica_id}")
-            return order_executor_pb2.ElectionResponse(message="OK")
-        return order_executor_pb2.ElectionResponse(message="ACK")
+        print(f"Received election request from {request.sender_id}")
+        if self.replica_id > request.sender_id:
+            print(f"Responding to election from {request.sender_id} as I have higher ID {self.replica_id}")
+            return order_executor_pb2.ElectionResponse(acknowledged=True)
+        return order_executor_pb2.ElectionResponse(acknowledged=False)
+    
+    def AnnounceLeader(self, request, context):
+        with self.lock:
+            self.leader_id = request.leader_id
+            self.is_leader = (self.replica_id == request.leader_id)
+            print(f"📢 Leader announced: Replica {self.leader_id}")
+        return order_executor_pb2.Ack(received=True)
 
+    
     def run(self):
         print(f"🏃 Executor loop started on replica {self.replica_id}")
         while True:
