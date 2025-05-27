@@ -180,8 +180,8 @@ services:
       - PYTHONFILE=/app/books_database/src/app.py
       - ROLE=primary
       - BACKUPS=books_backup_1:50061,books_backup_2:50062
-    ports:
-      - "50060:50060"
+    #ports:
+     # - "50070:50060"
     volumes:
       - ./books_database/src:/app/books_database/src
       - ./utils:/app/utils
@@ -193,8 +193,9 @@ services:
     environment:
       - PYTHONFILE=/app/books_database/src/app.py
       - ROLE=backup
-    ports:
-      - "50061:50060"
+      - PORT=50061
+    #ports:
+     # - "50061:50061"
     volumes:
       - ./books_database/src:/app/books_database/src
       - ./utils:/app/utils
@@ -206,8 +207,9 @@ services:
     environment:
       - PYTHONFILE=/app/books_database/src/app.py
       - ROLE=backup
-    ports:
-      - "50062:50060"
+      - PORT=50062
+    #ports:
+     # - "50062:50062"
     volumes:
       - ./books_database/src:/app/books_database/src
       - ./utils:/app/utils
