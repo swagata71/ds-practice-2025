@@ -157,7 +157,7 @@ services:
       - ./utils:/app/utils
 
   observability:
-    image: grafana/hotel-lgtm
+    image: grafana/otel-lgtm
     ports:
       - "3000:3000"    # Grafana UI
       - "4317:4317"    # gRPC OTLP
