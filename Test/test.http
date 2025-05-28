@@ -1,0 +1,33 @@
+### single ok
+POST http://localhost:8081/checkout
+Content-Type: application/json
+
+{
+  "order_id": "{{$guid}}",
+  "user_id": "user123",
+  "amount": 30,
+  "payment_method": "credit_card",
+  "user": {
+    "name": "Alice",
+    "contact": "alice@example.com"
+  },
+  "creditCard": {
+    "number": "4111111111111111",
+    "expirationDate": "12/25",
+    "cvv": "123"
+  },
+  "userComment": "No rush",
+  "items": [
+    {"name": "Book A", "quantity": 1}
+  ],
+  "billingAddress": {
+    "street": "100 Main St",
+    "city": "Tartu",
+    "state": "Tartu County",
+    "zip": "50090",
+    "country": "Estonia"
+  },
+  "shippingMethod": "Standard",
+  "giftWrapping": false,
+  "termsAccepted": true
+}

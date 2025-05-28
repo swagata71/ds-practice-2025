@@ -21,6 +21,8 @@ import suggestions_pb2_grpc as suggestions_pb2_grpc
 BOOK_SUGGESTIONS = {
     "Book A": ["Book C", "Book D"],
     "Book B": ["Book E", "Book F"],
+    "Book C": ["Book A", "Book B"],
+    "Book D": ["Book E", "Book F"],
     "Book K": ["Book G", "Book H"],
     "Book L": ["Book I", "Book J"],
 }

@@ -48,15 +48,22 @@ class BooksDatabaseServicer(books_database_pb2_grpc.BooksDatabaseServicer):
         return books_database_pb2.ReadResponse(stock=stock)
 
     def DecrementStock(self, request, context):
-        with self.lock:
-            current = self.db.get(request.title, 0)
-            if current >= request.quantity:
-                self.db[request.title] = current - request.quantity
-                print(f"Decremented {request.title} by {request.quantity}. Remaining: {self.db[request.title]}")
-                return books_database_pb2.StockResponse(success=True, remaining=self.db[request.title])
+        with self.lock:                             
+            available = self.db.get(request.title, 0)
+            if available >= request.quantity:
+                new_stock = available - request.quantity
+                self.db[request.title] = new_stock
+                print(f"{request.title}: decremented by {request.quantity} "
+                    f"(remaining={new_stock})")
+                return books_database_pb2.StockResponse(
+                    success=True, remaining=new_stock
+                )
             else:
-                print(f"Not enough stock for {request.title}")
-                return books_database_pb2.StockResponse(success=False, remaining=current)
+                print(f"{request.title}: not enough stock (have {available})")
+                return books_database_pb2.StockResponse(
+                    success=False, remaining=available
+                )
+
 
     # Backup only
     def ReplicateWrite(self, request, context):
