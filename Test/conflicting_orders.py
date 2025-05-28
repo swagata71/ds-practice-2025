@@ -60,9 +60,9 @@ def main():
     print(f"  wins         : {len(successes)}")
     print(f"  expected rej.: {len(rejects)}")
     if len(successes)==1 and len(rejects)==THREADS-1:
-        print("✅  Concurrency control PASS")
+        print("Concurrency control PASS")
     else:
-        print("❌  Concurrency control FAIL")
+        print("Concurrency control FAIL")
     if lat:
         print(f"  latency p50 = {statistics.median(lat):.1f} ms   "
               f"max = {max(lat):.1f} ms")
