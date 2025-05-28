@@ -25,6 +25,12 @@ class BooksDatabaseServicer(books_database_pb2_grpc.BooksDatabaseServicer):
         self.lock = threading.Lock()
         self.role = role
         self.backup_stubs = []
+        SEED_STOCK = {"Book A": 3, "Book B": 5}
+
+        for title, qty in SEED_STOCK.items():
+            self.db[title] = qty
+            print(f"[bootstrap] {title} → {qty}")
+
 
         if role == "primary" and backup_peers:
             for peer in backup_peers:
