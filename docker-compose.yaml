@@ -155,3 +155,13 @@ services:
     volumes:
       - ./books_database/src:/app/books_database/src
       - ./utils:/app/utils
+
+  observability:
+    image: grafana/hotel-lgtm
+    ports:
+      - "3000:3000"    # Grafana UI
+      - "4317:4317"    # gRPC OTLP
+      - "4318:4318"    # HTTP OTLP
+    environment:
+      - OTEL_METRIC_EXPORT_INTERVAL=1000
+
