@@ -25,7 +25,7 @@ class BooksDatabaseServicer(books_database_pb2_grpc.BooksDatabaseServicer):
         self.lock = threading.Lock()
         self.role = role
         self.backup_stubs = []
-        SEED_STOCK = {"Book A": 3, "Book B": 5}
+        SEED_STOCK = {"Book A": 1,}
 
         for title, qty in SEED_STOCK.items():
             self.db[title] = qty
